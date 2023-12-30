@@ -12,8 +12,8 @@ This utility is designed to act like 'free' on Linux systems.  It is a tool for 
    
    To install via Homebrew, run the following:
 
-   brew tap zfdang/free-for-macOS
-   brew install free-for-macOS
+      brew tap zfdang/free-for-macOS
+      brew install free-for-macOS
 
 ### COMPILATION:
 
