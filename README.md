@@ -53,6 +53,10 @@ https://stackoverflow.com/questions/14789672/why-does-host-statistics64-return-i
 ```
 
 ```
+https://novov.me/blog/posts/mixedmemories
+```
+
+```
 https://www.jianshu.com/p/c31f63f14afb
 ```
 
