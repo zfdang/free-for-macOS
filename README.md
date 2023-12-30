@@ -45,7 +45,15 @@ https://blog.guillaume-gomez.fr/articles/2021-09-06+sysinfo%3A+how+to+extract+sy
 ```
 
 ```
+https://apple.stackexchange.com/questions/81581/why-does-free-active-inactive-speculative-wired-not-equal-total-ram
+```
+
+```
 https://stackoverflow.com/questions/14789672/why-does-host-statistics64-return-inconsistent-results
+```
+
+```
+https://www.jianshu.com/p/c31f63f14afb
 ```
 
 ## code and brew package

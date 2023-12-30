@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 
     /* print the header */
     printf("%20s %14s %14s %14s %14s %14s\n",
-        "total", "used", "free", "active", "inactive", "wired");
+        "total", "used", "free", "cached", "app", "available");
 
 
     /* loop over this in case we are polling */
@@ -116,12 +116,17 @@ int main(int argc, char **argv) {
         }
         /* we have collected data, put it into our structure */
         formatBytes(hbi.max_mem, mem.total, sizeof(mem.total), human);
-        formatBytes((vm_stat.active_count + vm_stat.inactive_count + vm_stat.wire_count) * page_size, mem.used, sizeof(mem.used), human);
+        formatBytes((vm_stat.active_count + vm_stat.inactive_count + vm_stat.wire_count + vm_stat.speculative_count 
+        + vm_stat.compressor_page_count - vm_stat.purgeable_count - vm_stat.external_page_count)  * page_size, mem.used, sizeof(mem.used), human);
         formatBytes(vm_stat.free_count * page_size, mem.free, sizeof(mem.free), human);
         formatBytes(vm_stat.active_count * page_size, mem.active, sizeof(mem.active), human);
         formatBytes(vm_stat.inactive_count * page_size, mem.inactive, sizeof(mem.inactive), human);
         formatBytes(vm_stat.wire_count * page_size, mem.wired, sizeof(mem.wired), human);
+        formatBytes((vm_stat.purgeable_count + vm_stat.external_page_count) * page_size, mem.cached, sizeof(mem.cached), human);
+        formatBytes((vm_stat.active_count + vm_stat.speculative_count) * page_size, mem.app, sizeof(mem.app), human);
         // available = TotalRAM - (active_count + inactive_count + wire_count + speculative_count - purgeable_count)
+        formatBytes(hbi.max_mem - (vm_stat.active_count + vm_stat.inactive_count + vm_stat.wire_count + vm_stat.speculative_count 
+        - vm_stat.purgeable_count)  * page_size, mem.available, sizeof(mem.available), human);
        
         // get swap info
         if (sysctl(vmmib, 2, &swapinfo, &swapinfo_sz, NULL, 0) == -1) {
@@ -136,7 +141,7 @@ int main(int argc, char **argv) {
 
         /* display the memory usage statistics */
          printf("Mem: %15s %14s %14s %14s %14s %14s\n",
-             mem.total, mem.used, mem.free, mem.active, mem.inactive, mem.wired);
+             mem.total, mem.used, mem.free, mem.cached, mem.app, mem.available);
          printf("Swap: %14s %14s %14s\n", swap.total, swap.used, swap.free);
 
         /* does the loop continue? */

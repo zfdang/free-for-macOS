@@ -16,4 +16,6 @@ typedef struct mem {
     char inactive[14];
     char wired[14];
     char available[14];
+    char cached[14];
+    char app[14];
 } mem_t;
