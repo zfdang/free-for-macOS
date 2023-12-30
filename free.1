@@ -1,0 +1,77 @@
+.Dd March 10, 2008
+.Dt FREE 1
+.Os
+.Sh NAME
+.Nm free
+.Nd Display the amount of free and used memory in the system
+.Sh SYNOPSIS
+.Nm
+.Fl b
+.Op Fl s Ar delay
+.Nm
+.Fl k
+.Op Fl s Ar delay
+.Nm
+.Fl m
+.Op Fl m Ar delay
+.Nm
+.Fl Vh?
+.Sh DESCRIPTION
+The
+.Nm
+utility displays the total amount of free and used physical memory in the
+system, as well as the active, inactive, and wired page counts.
+.Pp
+The following options are available:
+.Bl -tag -width indent
+.It Fl b
+Display memory sizes in bytes.
+.It Fl k
+Display memory sizes in kilobytes (default if no options given).
+.It Fl m
+Display memory sizes in megabytes.
+.It Fl s Ar delay
+Sleep for
+.Ar delay
+seconds before display memory statistics again.  This option causes free to
+continuously poll the system until SIGINT is given.
+.It Fl V
+Display version information.
+.El
+.Pp
+The
+.Fl h
+and
+.Fl ?
+options display usage information.
+.Sh NOTES
+.Pp
+.Nm
+is modeled after the free utility on Linux systems (the one from the procps
+project).  This version aims to offer similar functionality, but due to
+design differences between Linux and Darwin, that is not always possible.
+.Pp
+The columns that free displays may be a bit confusing.  The first one, total,
+display the total amount of memory for that area.  The used column displays
+the amount of total memory that is currently in use.  The free column displays
+the amount of total memory that is currently in use.  The active column displays
+the number of active pages in the used memory.  The inactive column shows the
+number of inactive pages in the used memory.  And the wired column displays
+the number of wired down pages in the used memory.
+.Pp
+The Mem: row uses these formulas:
+.Dl total = used + free
+.Dl used = active + inactive + wired
+.Sh SEE ALSO
+.Xr hostinfo 1 ,
+.Xr ps 1 ,
+.Xr top 1
+.Sh BUGS
+.Pp
+Report bugs at http://code.google.com/p/darwin-free/
+.Sh AUTHORS
+.Pp
+Written by David Cantrell <david.l.cantrell@gmail.com>
+.Pp
+Contributions from Logan Johnson <logan.johnson@gmail.com> and
+Jim Bair <tseuhpsyde@gmail.com>
