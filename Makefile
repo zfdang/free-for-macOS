@@ -6,7 +6,7 @@
 #
 
 PKG         = free-for-macos
-VER         = 0.1
+VER         = 0.0.2
 
 CWD         = $(shell pwd)
 PREFIX      ?= /usr/local
@@ -43,11 +43,11 @@ clean:
 	sudo rm -rf $(PKG) $(PKG)-$(VER).pkg $(PKG).dmg $(PKG)-$(VER)
 
 tag:
-	git tag -s -m "v$(VER)" v$(VER)
+	git tag -m "v$(VER)" v$(VER)
 
 release: tag
 	rm -rf free-$(VER)
 	mkdir -p free-$(VER)
-	cp -p Makefile README COPYING.LIB free.1 free.c free.h free-$(VER)
+	cp -p Makefile README.md LICENSE free.1 free.c free.h free-$(VER)
 	tar -cvf - free-$(VER) | gzip -9c > free-$(VER).tar.gz
 	rm -rf free-$(VER)
