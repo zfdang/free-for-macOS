@@ -1,13 +1,7 @@
 /*
- * free.c
- * Memory usage utility for Darwin & MacOS X (similar to 'free' under Linux)
- *
- * by:  David Cantrell <david.l.cantrell@gmail.com>
- * Copyright (C) 2002, David Cantrell, Atlanta, GA, USA.
- * Copyright (C) 2008, David Cantrell, Honolulu, HI, USA.
- *
- * Licensed under the GNU Lesser General Public License version 2.1 or later.
- * See COPYING.LIB for licensing details.
+ * File: free.c
+ * Author: Zhengfa
+ * Description: This program displays memory usage statistics on macOS.
  */
 
 #include <stdio.h>
@@ -22,112 +16,128 @@
 #include <mach/kern_return.h>
 #include <mach/host_info.h>
 #include <mach/host_priv.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
 
 #include "free.h"
 
 extern char *optarg;
 extern int optind;
 
-static void set_units(int *units, int type) {
-    if (*units != -1) {
-        fprintf(stderr, COMBINED_UNIT_OPTIONS);
-        fflush(stderr);
-        exit(EXIT_FAILURE);
+
+void formatBytes(unsigned long long bytes, char *buffer, int bufferSize, int human) {
+    if(human == 0) {
+        snprintf(buffer, bufferSize, "%llu", bytes);
+        return;
+    }
+    
+    const char *suffixes[] = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
+    int suffixIndex = 0;
+    double result = 0.0;
+
+    while (bytes > 1024 && suffixIndex < sizeof(suffixes) / sizeof(suffixes[0])) {
+        result = bytes / 1024.0;
+        bytes /= 1024;
+        suffixIndex++;
     }
 
-    *units = type;
+    snprintf(buffer, bufferSize, "%.2f %s", result, suffixes[suffixIndex]);
 }
 
+
+/* print usage information */
 int main(int argc, char **argv) {
-    int poll = 0, div = 1, units = -1;
-    char c;
+    // show memory usage periodically
+    int poll = 0;
+    // show results in human readable format
+    int human = 0;
+    char c;    
     kern_return_t ke = KERN_SUCCESS;
-    mach_port_t host, task;
-    vm_size_t hps;
-    vm_statistics_data_t hs;
+    mach_port_t host;
     struct host_basic_info hbi;
-    mem_t ms;
-    mach_msg_type_number_t memsz, vmsz;
+    vm_size_t page_size = 4096;
+    vm_statistics64_data_t vm_stat;
+    mach_msg_type_number_t hbi_sz, vm_stat_sz;
+    mem_t mem;
+    mem_t swap;
+
+    struct xsw_usage swapinfo; /* defined in sysctl.h */
+    size_t swapinfo_sz = sizeof(swapinfo);
+    int vmmib[2] = {CTL_VM, VM_SWAPUSAGE};
+
 
     /* parse our command line options */
-    while ((c = getopt(argc, argv, "bkms:Vh?")) != -1) {
-        if (c == 'b') {
-            set_units(&units, BYTES);
-        } else if (c == 'k') {
-            set_units(&units, KILOBYTES);
-        } else if (c == 'm') {
-            set_units(&units, MEGABYTES);
+    while ((c = getopt(argc, argv, "hs:v")) != -1) {
+        if (c == 'h') {
+            human = 1;
         } else if (c == 's') {
             poll = atoi(optarg);
-        } else if (c == 'V') {
-            printf("darwin-free version %s\n", _FREE_VERSION);
+        } else if (c == 'v') {
+            printf("free: version %s\n", _FREE_VERSION);
             return EXIT_SUCCESS;
         } else {
             printf(FREE_USAGE, basename(argv[0]));
-
-            if (c == 'h' || c == '?') {
-                return EXIT_SUCCESS;
-            }
-
             return EXIT_FAILURE;
         }
     }
 
-    if (units == -1) {
-        units = KILOBYTES;
-    }
-
     host = mach_host_self();
-    task = mach_task_self();
 
     /* set some preferred sizes */
-    memsz = sizeof(hbi) / sizeof(integer_t);
-    vmsz = sizeof(hs) / sizeof(integer_t);
+    hbi_sz = sizeof(hbi) / sizeof(integer_t);
+    // vm_stat_sz = sizeof(vm_stat) / sizeof(integer_t);
+    vm_stat_sz = HOST_VM_INFO64_COUNT;
 
     /* get basic system information */
-    ke = host_info(host, HOST_BASIC_INFO, (host_info_t) &hbi, &memsz);
+    ke = host_info(host, HOST_BASIC_INFO, (host_info_t) &hbi, &hbi_sz);
     if (ke != KERN_SUCCESS) {
         mach_error("host_info", ke);
         return EXIT_FAILURE;
     }
 
+    /* get the virtual memory page size for this machine */
+    if ((ke = host_page_size(host, &page_size)) != KERN_SUCCESS) {
+        mach_error("host_page_size", ke);
+        return EXIT_FAILURE;
+    }
+
+    /* print the header */
+    printf("%20s %14s %14s %14s %14s %14s\n",
+        "total", "used", "free", "active", "inactive", "wired");
+
+
     /* loop over this in case we are polling */
     while (1) {
-        /* get the virtual memory page size for this machine */
-        if ((ke = host_page_size(host, &hps)) != KERN_SUCCESS) {
-            mach_error("host_page_size", ke);
-            return EXIT_FAILURE;
-        }
-
         /* gather virtual memory statistics */
-        ke = host_statistics(host, HOST_VM_INFO, (host_info_t) &hs, &vmsz);
+        ke = host_statistics64(host, HOST_VM_INFO64, (host_info64_t) &vm_stat, &vm_stat_sz);
         if (ke != KERN_SUCCESS) {
             mach_error("host_statistics", ke);
             return EXIT_FAILURE;
         }
-
-        /* select divisor */
-        if (units == KILOBYTES) {
-            div = 1024;
-        } else if (units == MEGABYTES) {
-            div = 1048576;
-        }
-
         /* we have collected data, put it into our structure */
-        ms.total = hbi.max_mem / div;
-        ms.used = ((hs.active_count + hs.inactive_count + hs.wire_count)
-                   * hps) / div;
-        ms.free = (hs.free_count * hps) / div;
-        ms.active = (hs.active_count * hps) / div;
-        ms.inactive = (hs.inactive_count * hps) / div;
-        ms.wired = (hs.wire_count * hps) / div;
+        formatBytes(hbi.max_mem, mem.total, sizeof(mem.total), human);
+        formatBytes((vm_stat.active_count + vm_stat.inactive_count + vm_stat.wire_count) * page_size, mem.used, sizeof(mem.used), human);
+        formatBytes(vm_stat.free_count * page_size, mem.free, sizeof(mem.free), human);
+        formatBytes(vm_stat.active_count * page_size, mem.active, sizeof(mem.active), human);
+        formatBytes(vm_stat.inactive_count * page_size, mem.inactive, sizeof(mem.inactive), human);
+        formatBytes(vm_stat.wire_count * page_size, mem.wired, sizeof(mem.wired), human);
+        // available = TotalRAM - (active_count + inactive_count + wire_count + speculative_count - purgeable_count)
+       
+        // get swap info
+        if (sysctl(vmmib, 2, &swapinfo, &swapinfo_sz, NULL, 0) == -1) {
+            fprintf(stderr, "Could not collect VM info, errno %d - %s", errno, strerror(errno));
+            return EXIT_FAILURE;
+        }
+        // printf("swapinfo: %lld %lld %lld\n", swapinfo.xsu_total, swapinfo.xsu_used, swapinfo.xsu_avail);
+
+        formatBytes(swapinfo.xsu_total, swap.total, sizeof(swap.total), human);
+        formatBytes(swapinfo.xsu_used, swap.used, sizeof(swap.used), human);
+        formatBytes(swapinfo.xsu_avail, swap.free, sizeof(swap.free), human);
 
         /* display the memory usage statistics */
-        printf("%18s %10s %10s %10s %10s %10s\n",
-               "total", "used", "free", "active", "inactive", "wired");
-        printf("Mem: %13llu %10llu %10llu %10llu %10llu %10llu\n",
-               ms.total, ms.used, ms.free,
-               ms.active, ms.inactive, ms.wired);
+         printf("Mem: %15s %14s %14s %14s %14s %14s\n",
+             mem.total, mem.used, mem.free, mem.active, mem.inactive, mem.wired);
+         printf("Swap: %14s %14s %14s\n", swap.total, swap.used, swap.free);
 
         /* does the loop continue? */
         if (poll != 0) {

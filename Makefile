@@ -1,12 +1,11 @@
 #
 # free Makefile
-# Memory usage utility for macOS
 # by:  Zhengfa Dang
-# See free.c for license and copyright information.
+# See LICENSE for license and copyright information.
 #
 
 PKG         = free-for-macos
-VER         = 0.0.2
+VER         = 0.2
 
 CWD         = $(shell pwd)
 PREFIX      ?= /usr/local
@@ -17,10 +16,6 @@ CDEBUGFLAGS = -g
 
 SRCS        = free.c
 OBJS        = free.o
-
-# Packaging commands
-PACKAGEMAKER=/Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker
-HDIUTIL=/usr/bin/hdiutil
 
 free: $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o free

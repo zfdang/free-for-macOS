@@ -1,13 +1,15 @@
-# free-for-macOS
+# free for macOS
 
 A memory usage utility for macOS  (similar with Linux Free Command)
 
-This utility is designed to act like 'free' on Linux systems.  It is a    tool for displaying memory usage statistics.  Since the Mach microkernel   design is different than Linux, the values reported are not an exact    duplicate of what you can get from a Linux system.  Be sure to read the    man page for an explanation of the program output.
+This utility is designed to act like 'free' on Linux systems.  It is a tool for displaying memory usage statistics. Since the Mach microkernel design is different than Linux, the values reported are not an exact duplicate of what you can get from a Linux system.  Be sure to read the man page for an explanation of the program output.
 
 # Installation
+
 ### HOMEBREW:
 
    A Homebrew formula is available at https://github.com/zfdang/homebrew-free-for-macOS
+   
    To install via Homebrew, run the following:
 
    brew tap zfdang/free-for-macOS
@@ -33,7 +35,20 @@ This utility is designed to act like 'free' on Linux systems.  It is a    tool f
 
    See free(1).
 
+
 # Reference
+
+## how to calculate memory in macOS:
+
+```
+https://blog.guillaume-gomez.fr/articles/2021-09-06+sysinfo%3A+how+to+extract+systems%27+information
+```
+
+```
+https://stackoverflow.com/questions/14789672/why-does-host-statistics64-return-inconsistent-results
+```
+
+## code and brew package
 
 ```
 https://github.com/dcantrell/darwin-free
