@@ -7,7 +7,7 @@ This utility is designed to act like 'free' on Linux systems.  It is a tool for 
 ```
 ❯ free -h
                total           used           free         cached            app          wired
-Mem:        32.00 GB       17.31 GB        2.30 GB       14.40 GB       14.11 GB        2.09 GB
+Mem:        32.00 GB       18.69 GB      337.48 MB       12.98 GB       15.48 GB        2.04 GB
 Swap:         0.00 B         0.00 B         0.00 B
 ```
 
@@ -40,30 +40,30 @@ Swap:         0.00 B         0.00 B         0.00 B
 
 ```
 ❯ free -v
-free: version 1.0
+free: version 1.1.0
 ❯ free
                total           used           free         cached            app          wired
-Mem:     34359738368    18562465792     2487943168    15471935488    15431581696     1932247040
+Mem:     34359738368    20060241920      282902528    14016593920    16661561344     2149351424
 Swap:              0              0              0
 ❯ free -h
                total           used           free         cached            app          wired
-Mem:        32.00 GB       17.31 GB        2.30 GB       14.40 GB       14.11 GB        2.09 GB
+Mem:        32.00 GB       18.69 GB      337.48 MB       12.98 GB       15.48 GB        2.04 GB
 Swap:         0.00 B         0.00 B         0.00 B
 ❯ free -h -s 1
                total           used           free         cached            app          wired
-Mem:        32.00 GB       17.30 GB        2.31 GB       14.41 GB       14.31 GB        1.87 GB
+Mem:        32.00 GB       18.67 GB      344.30 MB       12.99 GB       15.48 GB        2.03 GB
 Swap:         0.00 B         0.00 B         0.00 B
 
                total           used           free         cached            app          wired
-Mem:        32.00 GB       17.31 GB        2.30 GB       14.41 GB       14.14 GB        2.05 GB
+Mem:        32.00 GB       18.66 GB      336.53 MB       13.02 GB       15.42 GB        2.07 GB
 Swap:         0.00 B         0.00 B         0.00 B
 
                total           used           free         cached            app          wired
-Mem:        32.00 GB       17.31 GB        2.30 GB       14.41 GB       14.16 GB        2.03 GB
+Mem:        32.00 GB       18.68 GB      337.17 MB       12.99 GB       15.48 GB        2.04 GB
 Swap:         0.00 B         0.00 B         0.00 B
 
                total           used           free         cached            app          wired
-Mem:        32.00 GB       17.31 GB        2.30 GB       14.41 GB       14.16 GB        2.03 GB
+Mem:        32.00 GB       18.65 GB      343.44 MB       13.02 GB       15.42 GB        2.06 GB
 Swap:         0.00 B         0.00 B         0.00 B
 ^C
 ```
@@ -74,10 +74,28 @@ or
 
 # Explanation:
 
+Total memory is fetched from host_info.
+
+`https://developer.apple.com/documentation/kernel/1502514-host_info`
+
+All other memory information is fetched from host_statistics64.
+
+`https://developer.apple.com/documentation/kernel/1502863-host_statistics64`
+
+Here are the methods to calculate memory statistics:
+
+## free memory
+
+```
+// free = free_count - speculative_count; verified
+formatBytes((vm_stat.free_count - vm_stat.speculative_count) * page_size, mem.free, sizeof(mem.free), human);
+
+```
+
 ## used memory
 ```
 // truely-free = free-count - speculative_count
-// used = total - truely-free - cached; partially verified, still small discrepancy
+// used = total - truely-free - cached; partially verified, still has small discrepancy with "activity monitor"
 formatBytes(hbi.max_mem - (vm_stat.free_count - vm_stat.speculative_count + vm_stat.purgeable_count + vm_stat.external_page_count) * page_size, mem.used, sizeof(mem.used), human);
 ```
 

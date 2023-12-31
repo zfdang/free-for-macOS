@@ -5,7 +5,7 @@
 #
 
 PKG         = free-for-macos
-VER         = 1.0
+VER         = 1.1.0
 
 CWD         = $(shell pwd)
 PREFIX      ?= /usr/local

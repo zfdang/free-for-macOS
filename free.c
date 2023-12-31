@@ -161,8 +161,8 @@ int main(int argc, char **argv) {
         /* we have collected data, put it into our structure */
         // total; verified
         formatBytes(hbi.max_mem, mem.total, sizeof(mem.total), human);
-        // free; verified
-        formatBytes(vm_stat.free_count * page_size, mem.free, sizeof(mem.free), human);
+        // free = free_count - speculative_count; verified
+        formatBytes((vm_stat.free_count - vm_stat.speculative_count) * page_size, mem.free, sizeof(mem.free), human);
         // wired; verified
         formatBytes(vm_stat.wire_count * page_size, mem.wired, sizeof(mem.wired), human);
         // cached file = purgeable_count + external_page_count; verified
