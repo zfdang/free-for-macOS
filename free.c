@@ -44,6 +44,51 @@ void formatBytes(unsigned long long bytes, char *buffer, int bufferSize, int hum
     snprintf(buffer, bufferSize, "%.2f %s", result, suffixes[suffixIndex]);
 }
 
+// void dumpVmStat(vm_statistics64_data_t *vm, long pagesize, long TotalRAM) {
+//     char value[32];
+
+//     // raw counts
+//     formatBytes(vm->active_count * pagesize, value, sizeof(value), 1);
+//     printf("active_count memory %s\n", value);
+
+//     formatBytes(vm->inactive_count * pagesize, value, sizeof(value), 1);
+//     printf("inactive_count memory %s\n", value);
+    
+//     formatBytes(vm->wire_count * pagesize, value, sizeof(value), 1);
+//     printf("wire_count memory %s\n", value);
+
+//     formatBytes(vm->free_count * pagesize, value, sizeof(value), 1);
+//     printf("free_count memory %s\n", value);
+
+//     formatBytes(vm->internal_page_count * pagesize, value, sizeof(value), 1);
+//     printf("internal_page_count memory %s\n", value);
+    
+//     formatBytes(vm->speculative_count * pagesize, value, sizeof(value), 1);
+//     printf("speculative_count memory %s\n", value);
+    
+//     formatBytes(vm->compressor_page_count * pagesize, value, sizeof(value), 1);
+//     printf("compressor_page_count memory %s\n", value);
+
+//     formatBytes(vm->purgeable_count * pagesize, value, sizeof(value), 1);
+//     printf("purgeable_count memory %s\n", value);
+
+//     formatBytes(vm->external_page_count * pagesize, value, sizeof(value), 1);
+//     printf("external_page_count memory %s\n", value);
+
+//     // derived numbers
+//     formatBytes((vm->purgeable_count + vm->external_page_count )* pagesize, value, sizeof(value), 1);
+//     printf("cached = purgeable_count + external_page_count %s\n", value);
+
+//     formatBytes((vm->internal_page_count - vm->purgeable_count )* pagesize, value, sizeof(value), 1);
+//     printf("app = internal_page_count - purgeable_count %s\n", value);
+
+//     formatBytes((vm->free_count - vm->speculative_count )* pagesize, value, sizeof(value), 1);
+//     printf("truely free = free_count - speculative_count %s\n", value);
+
+//     formatBytes(TotalRAM - (vm->free_count - vm->speculative_count + vm->purgeable_count + vm->external_page_count)* pagesize, value, sizeof(value), 1);
+//     printf("used = total - truely-free - cached) %s\n", value);
+// }
+
 
 /* print usage information */
 int main(int argc, char **argv) {
@@ -101,11 +146,6 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    /* print the header */
-    printf("%20s %14s %14s %14s %14s %14s\n",
-        "total", "used", "free", "cached", "app", "available");
-
-
     /* loop over this in case we are polling */
     while (1) {
         /* gather virtual memory statistics */
@@ -114,34 +154,41 @@ int main(int argc, char **argv) {
             mach_error("host_statistics", ke);
             return EXIT_FAILURE;
         }
+
+        // method to dump metrics for calculation verification
+        // dumpVmStat(&vm_stat, page_size, hbi.max_mem);
+
         /* we have collected data, put it into our structure */
+        // total; verified
         formatBytes(hbi.max_mem, mem.total, sizeof(mem.total), human);
-        formatBytes((vm_stat.active_count + vm_stat.inactive_count + vm_stat.wire_count + vm_stat.speculative_count 
-        + vm_stat.compressor_page_count - vm_stat.purgeable_count - vm_stat.external_page_count)  * page_size, mem.used, sizeof(mem.used), human);
+        // free; verified
         formatBytes(vm_stat.free_count * page_size, mem.free, sizeof(mem.free), human);
-        formatBytes(vm_stat.active_count * page_size, mem.active, sizeof(mem.active), human);
-        formatBytes(vm_stat.inactive_count * page_size, mem.inactive, sizeof(mem.inactive), human);
+        // wired; verified
         formatBytes(vm_stat.wire_count * page_size, mem.wired, sizeof(mem.wired), human);
+        // cached file = purgeable_count + external_page_count; verified
         formatBytes((vm_stat.purgeable_count + vm_stat.external_page_count) * page_size, mem.cached, sizeof(mem.cached), human);
-        formatBytes((vm_stat.active_count + vm_stat.speculative_count) * page_size, mem.app, sizeof(mem.app), human);
-        // available = TotalRAM - (active_count + inactive_count + wire_count + speculative_count - purgeable_count)
-        formatBytes(hbi.max_mem - (vm_stat.active_count + vm_stat.inactive_count + vm_stat.wire_count + vm_stat.speculative_count 
-        - vm_stat.purgeable_count)  * page_size, mem.available, sizeof(mem.available), human);
+        // truely-free = free-count - speculative_count
+        // used = total - truely-free - cached; partially verified, still small discrepancy
+        formatBytes(hbi.max_mem - (vm_stat.free_count - vm_stat.speculative_count + vm_stat.purgeable_count + vm_stat.external_page_count) * page_size, mem.used, sizeof(mem.used), human);
+        // app memory = internal_page_count - purgeable_count; verified
+        formatBytes((vm_stat.internal_page_count - vm_stat.purgeable_count) * page_size, mem.app, sizeof(mem.app), human);
        
         // get swap info
         if (sysctl(vmmib, 2, &swapinfo, &swapinfo_sz, NULL, 0) == -1) {
             fprintf(stderr, "Could not collect VM info, errno %d - %s", errno, strerror(errno));
             return EXIT_FAILURE;
         }
-        // printf("swapinfo: %lld %lld %lld\n", swapinfo.xsu_total, swapinfo.xsu_used, swapinfo.xsu_avail);
 
         formatBytes(swapinfo.xsu_total, swap.total, sizeof(swap.total), human);
         formatBytes(swapinfo.xsu_used, swap.used, sizeof(swap.used), human);
         formatBytes(swapinfo.xsu_avail, swap.free, sizeof(swap.free), human);
 
+        /* print the header */
+        printf("%20s %14s %14s %14s %14s %14s\n",
+            "total", "used", "free", "cached", "app", "wired");
         /* display the memory usage statistics */
          printf("Mem: %15s %14s %14s %14s %14s %14s\n",
-             mem.total, mem.used, mem.free, mem.cached, mem.app, mem.available);
+             mem.total, mem.used, mem.free, mem.cached, mem.app, mem.wired);
          printf("Swap: %14s %14s %14s\n", swap.total, swap.used, swap.free);
 
         /* does the loop continue? */

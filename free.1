@@ -38,11 +38,9 @@ Display version information.
 .Nm
 is modeled after the free utility on Linux systems (the one from the procps project).  This version aims to offer similar functionality, but due to design differences between Linux and Darwin, that is not always possible.
 .Pp
-The columns that free displays may be a bit confusing.  The first one, total, display the total amount of memory for that area.  The used column displays the amount of total memory that is currently in use.  The free column displays the amount of total memory that is currently in use.  The active column displays the number of active pages in the used memory.  The inactive column shows the number of inactive pages in the used memory.  And the wired column displays the number of wired down pages in the used memory.
+
 .Pp
-The Mem: row uses these formulas:
-.Dl total = used + free
-.Dl used = active + inactive + wired
+For detail explanation, please see https://github.com/zfdang/free-for-macOS
 .Sh SEE ALSO
 .Xr hostinfo 1 ,
 .Xr ps 1 ,
