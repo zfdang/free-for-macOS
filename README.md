@@ -1,8 +1,8 @@
 # free for macOS
 
-A memory usage utility for macOS  (similar with Linux Free Command)
+A memory usage utility for macOS  (similar with 'free' in Linux)
 
-This utility is designed to act like 'free' on Linux systems.  It is a tool for displaying memory usage statistics. Since the Mach microkernel design is different than Linux, the values reported are not an exact duplicate of what you can get from a Linux system.  Be sure to read the man page for an explanation of the program output.
+This utility is designed to act like 'free' on Linux systems.  It is a tool to display memory usage statistics. Since the Mach microkernel design is different with Linux, the values reported are not exactly the same with what you can get from a Linux system. These metrics are almost aligned with outputs from 'Activity Monitor".
 
 ```
 ❯ free -h
@@ -15,12 +15,14 @@ Swap:         0.00 B         0.00 B         0.00 B
 
 ### HOMEBREW:
 
-   A Homebrew formula is available at https://github.com/zfdang/homebrew-free-for-macOS
+   A Homebrew formulae is available at https://github.com/zfdang/homebrew-free-for-macOS
    
    To install via Homebrew, run the following:
 
       brew tap zfdang/free-for-macOS
       brew install free-for-macOS
+
+   If we can collect enough stars, this formulae will be submmited to offical Homebrew repository.
 
 ### COMPILATION:
 
