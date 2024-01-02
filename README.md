@@ -108,9 +108,8 @@ formatBytes(hbi.max_mem - (vm_stat.free_count - vm_stat.speculative_count + vm_s
 ## cached memory
 
 ```
-// cached file memory  = (purgeable_count + external_page_count) * page_size
+// cached files memory  = purgeable_count + external_page_count; verified
 formatBytes((vm_stat.purgeable_count + vm_stat.external_page_count) * page_size, mem.cached, sizeof(mem.cached), human);
-
 ```
 
 ## app memory
@@ -118,7 +117,6 @@ formatBytes((vm_stat.purgeable_count + vm_stat.external_page_count) * page_size,
 ```
 // app memory = internal_page_count - purgeable_count; verified
 formatBytes((vm_stat.internal_page_count - vm_stat.purgeable_count) * page_size, mem.app, sizeof(mem.app), human);
-
 ```
 
 ## wired memory
