@@ -6,17 +6,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
 #include <unistd.h>
-#include <string.h>
 #include <errno.h>
 #include <libgen.h>
 #include <mach/mach.h>
-#include <mach/mach_error.h>
-#include <mach/kern_return.h>
-#include <mach/host_info.h>
-#include <mach/host_priv.h>
-#include <sys/types.h>
 #include <sys/sysctl.h>
 
 #include "free.h"
@@ -167,7 +160,7 @@ int main(int argc, char **argv) {
         formatBytes(vm_stat.wire_count * page_size, mem.wired, sizeof(mem.wired), human);
         // cached file = purgeable_count + external_page_count; verified
         formatBytes((vm_stat.purgeable_count + vm_stat.external_page_count) * page_size, mem.cached, sizeof(mem.cached), human);
-        // truely-free = free-count - speculative_count
+        // truely-free = free_count - speculative_count
         // used = total - truely-free - cached; partially verified, still small discrepancy
         formatBytes(hbi.max_mem - (vm_stat.free_count - vm_stat.speculative_count + vm_stat.purgeable_count + vm_stat.external_page_count) * page_size, mem.used, sizeof(mem.used), human);
         // app memory = internal_page_count - purgeable_count; verified
