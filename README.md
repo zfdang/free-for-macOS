@@ -76,11 +76,15 @@ or
 
 # Explanation:
 
-Total memory is fetched from host_info.
+Total memory is fetched from host_info().
 
 `https://developer.apple.com/documentation/kernel/1502514-host_info`
 
-All other memory information is fetched from host_statistics64.
+Swap information is fetched from sysctl().
+
+`https://forums.macrumors.com/threads/sysctl-and-ctl_vm.145571/`
+
+All other memory information is fetched from host_statistics64().
 
 `https://developer.apple.com/documentation/kernel/1502863-host_statistics64`
 
