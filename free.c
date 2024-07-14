@@ -24,7 +24,7 @@ void formatBytes(unsigned long long bytes, char *buffer, int bufferSize, int hum
         return;
     }
     
-    const char *suffixes[] = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
+    const char *suffixes[] = {"B", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"};
     int suffixIndex = 0;
     double result = 0.0;
 
@@ -34,7 +34,7 @@ void formatBytes(unsigned long long bytes, char *buffer, int bufferSize, int hum
         suffixIndex++;
     }
 
-    snprintf(buffer, bufferSize, "%.2f %s", result, suffixes[suffixIndex]);
+    snprintf(buffer, bufferSize, "%.1f%s", result, suffixes[suffixIndex]);
 }
 
 // void dumpVmStat(vm_statistics64_data_t *vm, long pagesize, long TotalRAM) {
@@ -177,12 +177,12 @@ int main(int argc, char **argv) {
         formatBytes(swapinfo.xsu_avail, swap.free, sizeof(swap.free), human);
 
         /* print the header */
-        printf("%20s %14s %14s %14s %14s %14s\n",
+        printf("%20s %11s %11s %11s %11s %11s\n",
             "total", "used", "free", "cached", "app", "wired");
         /* display the memory usage statistics */
-         printf("Mem: %15s %14s %14s %14s %14s %14s\n",
+         printf("Mem: %15s %11s %11s %11s %11s %11s\n",
              mem.total, mem.used, mem.free, mem.cached, mem.app, mem.wired);
-         printf("Swap: %14s %14s %14s\n", swap.total, swap.used, swap.free);
+         printf("Swap: %14s %11s %11s\n", swap.total, swap.used, swap.free);
 
         /* does the loop continue? */
         if (poll != 0) {
